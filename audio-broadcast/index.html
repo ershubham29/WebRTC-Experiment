@@ -8,7 +8,14 @@
 <html id="home" lang="en">
 
     <head>
-        <title>WebRTC one-to-many audio broadcasting ® Muaz Khan</title>
+        <script>
+            if(!location.hash.replace('#', '').length) {
+                location.href = location.href.split('#')[0] + '#' + (Math.random() * 100).toString().replace('.', '');
+                location.reload();
+            }
+        </script>
+        
+        <title>WebRTC one-to-many audio broadcasting</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -107,7 +114,8 @@
 
             <div id="participants"></div>
 
-            <script src="https://www.webrtc-experiment.com/firebase.js"> </script>
+            <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+            <script src="https://www.webrtc-experiment.com/socket.io.js"> </script>
             <script src="https://www.webrtc-experiment.com/RTCPeerConnection-v1.5.js"> </script>
             <script src="https://www.webrtc-experiment.com/audio-broadcast/broadcast.js"> </script>
             <script src="https://www.webrtc-experiment.com/audio-broadcast/broadcast-ui.js"> </script>

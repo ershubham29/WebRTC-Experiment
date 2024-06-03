@@ -1,7 +1,7 @@
 <?php
     // Muaz Khan         - www.MuazKhan.com
     // MIT License       - www.WebRTC-Experiment.com/licence
-    // Documentation     - github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC
+    // Documentation     - github.com/muaz-khan/RecordRTC
     
     // make sure that you're using newest ffmpeg version!
 
@@ -32,7 +32,7 @@
     foreach($OSList as $CurrOS=>$Match)
     {
         // Find a match
-        if (eregi($Match, $_SERVER['HTTP_USER_AGENT']))
+        if (preg_match("/".$Match."/i", $_SERVER['HTTP_USER_AGENT']))
         {
             // We found the correct match
             break;
@@ -64,10 +64,10 @@
                     // make sure that you're using newest ffmpeg version!
                     
                     if(!strrpos($CurrOS, "Windows")) {
-                        $cmd = '-i '.$audioFile.' -itsoffset -00:00:02 -i '.$videoFile.' -map 0:0 -map 1:0 '.$mergedFile;
+                        $cmd = '-i '.$audioFile.' -i '.$videoFile.' -map 0:0 -map 1:0 '.$mergedFile;
                     }
                     else {
-                        $cmd = ' -i '.$audioFile.' -itsoffset -00:00:02 -i '.$videoFile.' -c:v mpeg4 -c:a vorbis -b:v 64k -b:a 12k -strict experimental '.$mergedFile;
+                        $cmd = ' -i '.$audioFile.' -i '.$videoFile.' -c:v mpeg4 -c:a vorbis -b:v 64k -b:a 12k -strict experimental '.$mergedFile;
                     }
                     
                     exec('ffmpeg '.$cmd.' 2>&1', $out, $ret);

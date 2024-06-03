@@ -1,23 +1,30 @@
-## HTML2Canvas & RecordRTC / [Demo](https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/)
+# Canvas+WebPage Recording using RecordRTC
 
-This [WebRTC](https://www.webrtc-experiment.com/) experiment is using [RecordRTC.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC) to record HTML/Canvas into webm; where [html2canvas.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/part-of-screen-sharing) is used to capture HTML-snapshots. Those snapshots are encoded in webp; and then encoded again in webm.
+Record entire webpage, part of webpage eg. a DIV, Canvas2D animatino, WebGL animation, videos+webpage, or any activity on the webpage.
 
-You can say it: "HTML/Canvas Recording using RecordRTC"!
+## Demos
 
-<a href="https://www.webrtc-experiment.com/getMediaElement/">
-	<img src="https://lh5.googleusercontent.com/-mZGcj67_NTE/UtY2vw9bljI/AAAAAAAAAl0/T6lvI68bfb8/s0-I/RecordRTC-Canvas-Recording.gif" />
-</a>
+1. [WebPage+Canvas Recording](https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/webpage-recording.html)
+2. [HTML5 Canvas Dashboard + 2D Animation Recording](https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/record-canvas-drawings.html)
+3. [HTML5 2D Animation Recording](https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/Canvas-Animation-Recording.html)
+4. [HTML5 2D Animation + Microphone Recording](https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/Canvas-Animation-Recording-Plus-Microphone.html)
+5. [HTML5 2D Animation + Mp3 Recording](https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/Canvas-Animation-Recording-Plus-Mp3.html)
+6. [HTML5 2D Animation + Microphone + Mp3 Recording](https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/Canvas-Animation-Recording-Plus-Microphone-Plus-Mp3.html)
+7. [WebGL Animation Recording](https://www.webrtc-experiment.com/RecordRTC/webgl/)
+8. [plotly - WebGL Recording](https://www.webrtc-experiment.com/RecordRTC/plotly.html)
 
-=
+# How to use?
 
 ```html
-<script src="//www.WebRTC-Experiment.com/RecordRTC.js"></script>
-<script src="//www.webrtc-experiment.com/screenshot.js"></script>
-<div id="elementToShare" style="width:100%;height:100%;background:green;"></div>
+<script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+<script src="https://www.webrtc-experiment.com/screenshot.js"></script>
+<div id="element-to-record" style="width:100%;height:100%;background:green;"></div>
 <script>
-var elementToShare = document.getElementById('elementToShare');
-var recorder = RecordRTC(elementToShare, {
-    type: 'canvas'
+var elementToRecord = document.getElementById('element-to-record');
+var recorder = RecordRTC(elementToRecord, {
+    type: 'canvas',
+    showMousePointer: true,
+    useWhammyRecorder: true
 });
 recorder.startRecording();
 recorder.stopRecording(function(url) {
@@ -26,19 +33,31 @@ recorder.stopRecording(function(url) {
 </script>
 ```
 
-=
+## Record `<canvas>`
 
-[RecordRTC](https://www.webrtc-experiment.com/RecordRTC/) is a server-less (entire client-side) JavaScript library can be used to record WebRTC audio/video media streams. It supports cross-browser audio/video recording.
+```html
+<script src="https://www.webrtc-experiment.com/RecordRTC/Whammy.js"></script>
+<script src="https://www.webrtc-experiment.com/RecordRTC/CanvasRecorder.js"></script>
+<canvas></canvas>
+<script>
+var canvas = document.querySelector('canvas');
+var recorder = new CanvasRecorder(window.canvasElementToBeRecorded, {
+    disableLogs: false
+});
 
-1. [RecordRTC to Node.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-Nodejs)
-2. [RecordRTC to PHP](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-PHP)
-3. [RecordRTC to ASP.NET MVC](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-ASPNETMVC)
-4. [RecordRTC & HTML-2-Canvas i.e. Canvas/HTML Recording!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/Canvas-Recording)
-5. [MRecordRTC i.e. Multi-RecordRTC!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/MRecordRTC)
-6. [RecordRTC on Ruby!](https://github.com/cbetta/record-rtc-experiment)
-7. [RecordRTC over Socket.io](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-over-Socketio)
+// start recording <canvas> drawings
+recorder.record();
 
-=
+// a few minutes later
+recorder.stop(function(blob) {
+    var url = URL.createObjectURL(blob);
+    window.open(url);
+});
+</script>
+```
+
+Watch a video: https://vimeo.com/152119435
+
 
 ## License
 

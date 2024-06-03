@@ -1,377 +1,352 @@
-## [RecordRTC](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC): [WebRTC](https://www.webrtc-experiment.com/) audio/video recording / [Demo](https://www.webrtc-experiment.com/RecordRTC/)
+# RecordRTC.js | [Live Demo](https://www.webrtc-experiment.com/RecordRTC/)
 
-[RecordRTC](https://www.webrtc-experiment.com/RecordRTC/) is a server-less (entire client-side) JavaScript library can be used to record WebRTC audio/video media streams. It supports cross-browser audio/video recording.
+**WebRTC JavaScript Library for Audio+Video+Screen+Canvas (2D+3D animation) Recording**
 
-=
+[Chrome Extension](https://github.com/muaz-khan/Chrome-Extensions/tree/master/screen-recording) or [Dozens of Simple-Demos](https://www.webrtc-experiment.com/RecordRTC/simple-demos/) and [it is Open-Sourced](https://github.com/muaz-khan/RecordRTC) and has [API documentation](https://recordrtc.org/)
 
-## How RecordRTC encodes wav/webm?
+[![npm](https://img.shields.io/npm/v/recordrtc.svg)](https://npmjs.org/package/recordrtc) [![downloads](https://img.shields.io/npm/dm/recordrtc.svg)](https://npmjs.org/package/recordrtc) [![Build Status: Linux](https://travis-ci.org/muaz-khan/RecordRTC.png?branch=master)](https://travis-ci.org/muaz-khan/RecordRTC)
 
-|Media File|Bitrate/Framerate|encoders|Framesize|additional info|
-| ------------- |-------------|-------------|-------------|-------------|
-|Audio File (WAV) | 1411 kbps | pcm_s16le |44100 Hz|stereo, s16|
-|Video File (WebM)|60 kb/s | (whammy) vp8 codec yuv420p|--|SAR 1:1 DAR 4:3, 1k tbr, 1k tbn, 1k tbc (default)|
+**A demo using promises:**
 
-=
+```javascript
+let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+let recorder = new RecordRTCPromisesHandler(stream, {
+    type: 'video'
+});
+recorder.startRecording();
 
-1. [RecordRTC to Node.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-Nodejs)
-2. [RecordRTC to PHP](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-PHP)
-3. [RecordRTC to ASP.NET MVC](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-ASPNETMVC)
-4. [RecordRTC & HTML-2-Canvas i.e. Canvas/HTML Recording!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/Canvas-Recording)
-5. [MRecordRTC i.e. Multi-RecordRTC!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/MRecordRTC)
-6. [RecordRTC on Ruby!](https://github.com/cbetta/record-rtc-experiment)
-7. [RecordRTC over Socket.io](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-over-Socketio)
-8. [ffmpeg-asm.js and RecordRTC! Audio/Video Merging & Transcoding!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/ffmpeg)
-9. [RecordRTC / PHP / FFmpeg](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/PHP-and-FFmpeg)
-10. [Record Audio and upload to Nodejs server](https://www.npmjs.org/package/record-audio)
+const sleep = m => new Promise(r => setTimeout(r, m));
+await sleep(3000);
 
-=
+await recorder.stopRecording();
+let blob = await recorder.getBlob();
+invokeSaveAsDialog(blob);
+```
+
+**A demo using normal coding:**
+
+```javascript
+navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+}).then(async function(stream) {
+    let recorder = RecordRTC(stream, {
+        type: 'video'
+    });
+    recorder.startRecording();
+
+    const sleep = m => new Promise(r => setTimeout(r, m));
+    await sleep(3000);
+
+    recorder.stopRecording(function() {
+        let blob = recorder.getBlob();
+        invokeSaveAsDialog(blob);
+    });
+});
+```
+
+* [Watch a YouTube video presentation/tutorial](https://www.youtube.com/watch?v=YrLzTgdJ-Kg)
+
+## Browsers Support
+
+| Browser        | Operating System                    | Features               |
+| -------------  |-------------                        |---------------------   |
+| Google Chrome  | Windows + macOS + Ubuntu + Android  | audio + video + screen |
+| Firefox        | Windows + macOS + Ubuntu + Android  | audio + video + screen |
+| Opera          | Windows + macOS + Ubuntu + Android  | audio + video + screen |
+| Edge           | Windows 10                          | only audio             |
+| Safari         | macOS + iOS (iPhone/iPad)           | audio + video          |
+
+## Codecs Support
+
+| Browser       | Video               | Audio            |
+| ------------- |-------------        |-------------     |
+| Chrome        | VP8, VP9, H264, MKV | OPUS/VORBIS, PCM |
+| Opera         | VP8, VP9, H264, MKV | OPUS/VORBIS, PCM |
+| Firefox       | VP8, H264           | OPUS/VORBIS, PCM |
+| Safari        | VP8                 | OPUS/VORBIS, PCM |
+| Edge          | None                | PCM              |
+
+
+## CDN
 
 ```html
-<script src="//www.WebRTC-Experiment.com/RecordRTC.js"></script>
+<!-- recommended -->
+<script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+
+<!-- use 5.5.9 or any other version on cdnjs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/RecordRTC/5.5.9/RecordRTC.js"></script>
+
+<!-- NPM i.e. "npm install recordrtc" -->
+<script src="node_modules/recordrtc/RecordRTC.js"></script>
+
+<!-- bower -->
+<script src="bower_components/recordrtc/RecordRTC.js"></script>
 ```
 
-=
-
-#### How to record audio?
+## Configuration
 
 ```javascript
-var recordRTC = RecordRTC(mediaStream);
-recordRTC.startRecording();
-recordRTC.stopRecording(function(audioURL) {
-   mediaElement.src = audioURL;
+const recorder = RecordRTC(stream, {
+     // audio, video, canvas, gif
+    type: 'video',
+
+    // audio/webm
+    // video/webm;codecs=vp9
+    // video/webm;codecs=vp8
+    // video/webm;codecs=h264
+    // video/x-matroska;codecs=avc1
+    // video/mpeg -- NOT supported by any browser, yet
+    // video/mp4  -- NOT supported by any browser, yet
+    // audio/wav
+    // audio/ogg  -- ONLY Firefox
+    // demo: simple-demos/isTypeSupported.html
+    mimeType: 'video/webm',
+
+    // MediaStreamRecorder, StereoAudioRecorder, WebAssemblyRecorder
+    // CanvasRecorder, GifRecorder, WhammyRecorder
+    recorderType: MediaStreamRecorder,
+
+    // disable logs
+    disableLogs: true,
+
+    // get intervals based blobs
+    // value in milliseconds
+    timeSlice: 1000,
+
+    // requires timeSlice above
+    // returns blob via callback function
+    ondataavailable: function(blob) {},
+
+    // auto stop recording if camera stops
+    checkForInactiveTracks: false,
+
+    // requires timeSlice above
+    onTimeStamp: function(timestamp) {},
+
+    // both for audio and video tracks
+    bitsPerSecond: 128000,
+
+    // only for audio track
+    audioBitsPerSecond: 128000,
+
+    // only for video track
+    videoBitsPerSecond: 128000,
+
+    // used by CanvasRecorder and WhammyRecorder
+    // it is kind of a "frameRate"
+    frameInterval: 90,
+
+    // if you are recording multiple streams into single file
+    // this helps you see what is being recorded
+    previewStream: function(stream) {},
+
+    // used by CanvasRecorder and WhammyRecorder
+    // you can pass {width:640, height: 480} as well
+    video: HTMLVideoElement,
+
+    // used by CanvasRecorder and WhammyRecorder
+    canvas: {
+        width: 640,
+        height: 480
+    },
+
+    // used by StereoAudioRecorder
+    // the range 22050 to 96000.
+    sampleRate: 96000,
+
+    // used by StereoAudioRecorder
+    // the range 22050 to 96000.
+    // let us force 16khz recording:
+    desiredSampRate: 16000,
+
+    // used by StereoAudioRecorder
+    // Legal values are (256, 512, 1024, 2048, 4096, 8192, 16384).
+    bufferSize: 16384,
+
+    // used by StereoAudioRecorder
+    // 1 or 2
+    numberOfAudioChannels: 2,
+
+    // used by WebAssemblyRecorder
+    frameRate: 30,
+
+    // used by WebAssemblyRecorder
+    bitrate: 128000,
+
+    // used by MultiStreamRecorder - to access HTMLCanvasElement
+    elementClass: 'multi-streams-mixer'
 });
 ```
 
-Remember, you need to invoke `navigator.getUserMedia` method yourself; it is too easy to use!
+## MediaStream parameter
+
+MediaStream parameter accepts following values:
 
 ```javascript
-navigator.getUserMedia({audio: true}, function(mediaStream) {
-   window.recordRTC = RecordRTC(MediaStream);
-   recordRTC.startRecording();
+let recorder = RecordRTC(MediaStream || HTMLCanvasElement || HTMLVideoElement || HTMLElement, {});
+```
+
+## API
+
+```javascript
+RecordRTC.prototype = {
+    // start the recording
+    startRecording: function() {},
+
+    // stop the recording
+    // getBlob inside callback function
+    stopRecording: function(blobURL) {},
+
+    // pause the recording
+    pauseRecording: function() {},
+
+    // resume the recording
+    resumeRecording: function() {},
+
+    // auto stop recording after specific duration
+    setRecordingDuration: function() {},
+
+    // reset recorder states and remove the data
+    reset: function() {},
+
+    // invoke save as dialog
+    save: function(fileName) {},
+
+    // returns recorded Blob
+    getBlob: function() {},
+
+    // returns Blob-URL
+    toURL: function() {},
+
+    // returns Data-URL
+    getDataURL: function(dataURL) {},
+
+    // returns internal recorder
+    getInternalRecorder: function() {},
+
+    // initialize the recorder [deprecated]
+    initRecorder: function() {},
+
+    // fired if recorder's state changes
+    onStateChanged: function(state) {},
+
+    // write recorded blob into indexed-db storage
+    writeToDisk: function(audio: Blob, video: Blob, gif: Blob) {},
+
+    // get recorded blob from indexded-db storage
+    getFromDisk: function(dataURL, type) {},
+
+    // [deprecated]
+    setAdvertisementArray: function([webp1, webp2]) {},
+
+    // [deprecated] clear recorded data
+    clearRecordedData: function() {},
+
+    // clear memory; clear everything
+    destroy: function() {},
+
+    // get recorder's state
+    getState: function() {},
+
+    // [readonly] property: recorder's state
+    state: string,
+
+    // recorded blob [readonly] property
+    blob: Blob,
+
+    // [readonly] array buffer; useful only for StereoAudioRecorder
+    buffer: ArrayBuffer,
+
+    // RecordRTC version [readonly]
+    version: string,
+
+    // [readonly] useful only for StereoAudioRecorder
+    bufferSize: integer,
+
+    // [readonly] useful only for StereoAudioRecorder
+    sampleRate: integer
+}
+```
+
+Please check documentation here: [https://recordrtc.org/](https://recordrtc.org/)
+
+## Global APIs
+
+```javascript
+// "bytesToSize" returns human-readable size (in MB or GB)
+let size = bytesToSize(recorder.getBlob().size);
+
+// to fix video seeking issues
+getSeekableBlob(recorder.getBlob(), function(seekableBlob) {
+    invokeSaveAsDialog(seekableBlob);
 });
 
-btnStopRecording.onclick = function() {
-   recordRTC.stopRecording(function(audioURL) {
-      window.open(audioURL);
-   });
+// this function invokes save-as dialog
+invokeSaveAsDialog(recorder.getBlob(), 'video.webm');
+
+// use these global variables to detect browser
+let browserInfo = {isSafari, isChrome, isFirefox, isEdge, isOpera};
+
+// use this to store blobs into IndexedDB storage
+DiskStorage = {
+    init: function() {},
+    Fetch: function({audioBlob: Blob, videoBlob: Blob, gifBlob: Blob}) {},
+    Store: function({audioBlob: Blob, videoBlob: Blob, gifBlob: Blob}) {},
+    onError: function() {},
+    dataStoreName: function() {}
 };
 ```
 
-Also, you don't need to use prefixed versions of `getUserMedia` and `URL` objects. RecordRTC auto handles such things for you! Just use non-prefixed version:
+## How to fix echo issues?
 
-```javascript
-navigator.getUserMedia(media_constraints, onsuccess, onfailure);
-URL.createObjectURL(MediaStream);
-```
+1. Set `<video>.muted=true` and `<video>.volume=0`
+2. Pass `audio: {echoCancellation:true}` on getUserMedia
 
-=
+## Wiki
 
-#### How to record video?
+* [https://github.com/muaz-khan/RecordRTC/wiki](https://github.com/muaz-khan/RecordRTC/wiki)
 
-Everything is optional except `type:'video'`:
+## Releases
 
-```javascript
-var options = {
-   type: 'video'
-};
-var recordRTC = RecordRTC(mediaStream, options);
-recordRTC.startRecording();
-recordRTC.stopRecording(function(videoURL) {
-   mediaElement.src = videoURL;
-});
-```
+* [https://github.com/muaz-khan/RecordRTC/releases](https://github.com/muaz-khan/RecordRTC/releases)
 
-=
+## Unit Tests
 
-##### How to record animated GIF image?
+* [https://travis-ci.org/muaz-khan/RecordRTC](https://travis-ci.org/muaz-khan/RecordRTC)
 
-Everything is optional except `type:'gif'`:
+## Issues/Questions?
 
-```javascript
-var options = {
-   type: 'gif',
-   frameRate: 200,
-   quality: 10
-};
-var recordRTC = RecordRTC(mediaStream, options);
-recordRTC.startRecording();
-recordRTC.stopRecording(function(gifURL) {
-   mediaElement.src = gifURL;
-});
-```
+* Github: [https://github.com/muaz-khan/RecordRTC/issues](https://github.com/muaz-khan/RecordRTC/issues)
+* Disqus: [https://www.webrtc-experiment.com/RecordRTC/#ask](https://www.webrtc-experiment.com/RecordRTC/#ask)
+* Stackoverflow: [http://stackoverflow.com/questions/tagged/recordrtc](http://stackoverflow.com/questions/tagged/recordrtc)
+* Email: `muazkh => gmail`
 
-=
+## Credits
 
-##### How to record HTML2Canvas?
+| Library     | Usage |
+| ------------- |------------|
+| [Recorderjs](https://github.com/mattdiamond/Recorderjs) | StereoAudioRecorder |
+| [webm-wasm](https://github.com/GoogleChromeLabs/webm-wasm) | WebAssemblyRecorder |
+| [jsGif](https://github.com/antimatter15/jsgif) | GifRecorder |
+| [whammy](https://github.com/antimatter15/whammy) | WhammyRecorder |
 
-You can say it: "HTML/Canvas Recording using RecordRTC"!
+## Spec & Reference
 
-```html
-<script src="//www.WebRTC-Experiment.com/RecordRTC.js"></script>
-<script src="//www.webrtc-experiment.com/screenshot.js"></script>
-<div id="elementToShare" style="width:100%;height:100%;background:green;"></div>
-<script>
-var elementToShare = document.getElementById('elementToShare');
-var recordRTC = RecordRTC(elementToShare, {
-    type: 'canvas'
-});
-recordRTC.startRecording();
-recordRTC.stopRecording(function(url) {
-    window.open(url);
-});
-</script>
-```
-
-See a demo: https://www.webrtc-experiment.com/RecordRTC/Canvas-Recording/
-
-=
-
-##### `autoWriteToDisk`
-
-Using `autoWriteToDisk`; you can suggest RecordRTC to auto-write to indexed-db as soon as you call `stopRecording` method.
-
-```javascript
-var recordRTC = RecordRTC(MediaStream, {
-    autoWriteToDisk: true
-});
-```
-
-`autoWriteToDisk` is helpful for single stream recording and writing to disk; however for `MRecordRTC`; `writeToDisk` is preferred one.
-
-=
-
-##### `writeToDisk`
-
-You can write recorded blob to disk using `writeToDisk` method:
-
-```javascript
-recordRTC.stopRecording();
-recordRTC.writeToDisk();
-```
-
-=
-
-##### `getFromDisk`
-
-You can get recorded blob from disk using `getFromDisk` method:
-
-```javascript
-// get all blobs from disk
-RecordRTC.getFromDisk('all', function(dataURL, type) {
-   type == 'audio'
-   type == 'video'
-   type == 'gif'
-});
-
-// or get just single blob
-RecordRTC.getFromDisk('audio', function(dataURL) {
-   // only audio blob is returned from disk!
-});
-```
-
-For [MRecordRTC](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/MRecordRTC); you can use word `MRecordRTC` instead of `RecordRTC`!
-
-Another possible situation!
-
-```javascript
-var recordRTC = RecordRTC(mediaStream);
-recordRTC.startRecording();
-recordRTC.stopRecording(function(audioURL) {
-   mediaElement.src = audioURL;
-});
-
-// "recordRTC" instance object to invoke "getFromDisk" method!
-recordRTC.getFromDisk(function(dataURL) {
-   // audio blob is automaticlaly returned from disk!
-});
-```
-
-In the above example; you can see that `recordRTC` instance object is used instead of global `RecordRTC` object.
-
-=
-
-##### How to set video width/height?
-
-```javascript
-var options = {
-   type: 'video',
-   video: {
-      width: 320,
-      height: 240
-   },
-   canvas: {
-      width: 320,
-      height: 240
-   }
-};
-```
-
-=
-
-##### How to get DataURL?
-
-```javascript
-recordRTC.getDataURL(function(dataURL) {
-   mediaElement.src = dataURL;
-});
-```
-
-=
-
-##### How to get `Blob` object?
-
-```javascript
-blob = recordRTC.getBlob();
-```
-
-=
-
-##### How to get Virtual-URL?
-
-```javascript
-window.open( recordRTC.toURL() );
-```
-
-=
-
-##### How to invoke save-to-disk dialog?
-
-```javascript
-recordRTC.save();
-```
-
-=
-
-##### How to customize Buffer-Size for audio recording?
-
-```javascript
-var options = {
-   bufferSize: 16384
-};
-var recordRTC = RecordRTC(audioStream, options);
-```
-
-Following values are allowed for buffer-size:
-
-```javascript
-// Legal values are (256, 512, 1024, 2048, 4096, 8192, 16384)
-```
-
-You can write like this:
-
-```javascript
-var options = {
-   'buffer-size': 16384
-};
-```
-
-=
-
-##### How to customize Sample-Rate for audio recording?
-
-```javascript
-var options = {
-   sampleRate: 96000
-};
-var recordRTC = RecordRTC(audioStream, options);
-```
-
-Values for sample-rate must be greater than or equal to 22050 and less than or equal to 96000.
-
-You can write like this:
-
-```javascript
-var options = {
-   'sample-rate': 16384
-};
-```
-
-=
-
-##### Is WinXP supported?
-
-No WinXP SP2 support. However, RecordRTC works on WinXP Service Pack 3.
-
-=
-
-##### Is Chrome on Android supported?
-
-RecordRTC uses WebAudio API for stereo-audio recording. AFAIK, WebAudio is not supported on android chrome releases, yet.
-
-=
-
-##### Stereo or Mono?
-
-Audio recording fails for `mono` audio. So, try `stereo` audio only.
-
-=
-
-##### Possible issues/failures:
-
-Do you know "RecordRTC" fails recording audio because following conditions fails:
-
-1. Sample rate and channel configuration must be the same for input and output sides on Windows i.e. audio input/output devices mismatch
-2. Only the Default microphone device can be used for capturing.
-3. The requesting scheme is none of the following: http, https, chrome, extension's, or file (only works with `--allow-file-access-from-files`)
-4. The browser cannot create/initialize the metadata database for the API under the profile directory
-
-If you see this error message: `Uncaught Error: SecurityError: DOM Exception 18`; it means that you're using `HTTP`; whilst your webpage is loading worker file (i.e. `audio-recorder.js`) from `HTTPS`. Both files's (i.e. `RecordRTC.js` and `audio-recorder.js`) scheme MUST be same!
-
-=
-
-##### Web Audio APIs requirements
-
-1. If you're on Windows, you have to be running WinXP SP3, Windows Vista or better (will not work on Windows XP SP2 or earlier).
-2. On Windows, audio input hardware must be set to the same sample rate as audio output hardware.
-3. On Mac and Windows, the audio input device must be at least stereo (i.e. a mono/single-channel USB microphone WILL NOT work).
-
-=
-
-##### Why stereo?
-
-If you explorer chromium code; you'll see that some APIs can only be successfully called for `WAV` files with `stereo` audio.
-
-Stereo audio is only supported for WAV files.
-
-...still investigating the actual issue of failure with `mono` audio.
-
-=
-
-Media Stream Recording API (MediaRecorder object) is being implemented by both Firefox and Chrome. RecordRTC is also using MediaRecorder API for Firefox (nightly).
-
-RecordRTC is unable to record "mono" audio on chrome; however it seems that we can covert channels from "stereo" to "mono" using WebAudio API, though. MediaRecorder API's encoder only support 48k/16k mono audio channel (on Firefox Nightly).
-
-=
-
-##### Browser Support
-
-[RecordRTC Demo](https://www.webrtc-experiment.com/RecordRTC/) works fine on following web-browsers:
-
-| Browser        | Support           |
-| ------------- |-------------|
-| Google Chrome | [Stable](https://www.google.com/intl/en_uk/chrome/browser/) / [Canary](https://www.google.com/intl/en/chrome/browser/canary.html) / [Beta](https://www.google.com/intl/en/chrome/browser/beta.html) / [Dev](https://www.google.com/intl/en/chrome/browser/index.html?extra=devchannel#eula) |
-| Firefox | [Nightly](http://nightly.mozilla.org/) |
-
-=
-
-##### Credits
-
-1. [Recorderjs](https://github.com/mattdiamond/Recorderjs) for audio recording
-2. [whammy](https://github.com/antimatter15/whammy) for video recording
-3. [jsGif](https://github.com/antimatter15/jsgif) for gif recording
-
-=
-
-##### Spec & Reference
-
-1. [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html)
-2. [MediaRecorder](https://wiki.mozilla.org/Gecko:MediaRecorder)
+1. [MediaRecorder API](https://w3c.github.io/mediacapture-record/MediaRecorder.html)
+2. [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html)
 3. [Canvas2D](http://www.w3.org/html/wg/drafts/2dcontext/html5_canvas/)
-4. [MediaStream Recording](https://dvcs.w3.org/hg/dap/raw-file/tip/media-stream-capture/MediaRecorder.html)
-5. [Media Capture and Streams](http://www.w3.org/TR/mediacapture-streams/)
+4. [Media Capture and Streams](http://www.w3.org/TR/mediacapture-streams/)
 
-=
+## Who is using RecordRTC?
+
+| Framework     | Github               | Article            |
+| ------------- |-------------        |-------------     |
+| Angular2      | [github](https://github.com/ShankarSumanth/Angular2-RecordRTC) | [article](https://medium.com/@SumanthShankar/integrate-recordrtc-with-angular-2-typescript-942c9c4ca93f#.7x5yf2nr5) |
+| React.js       | [github](https://github.com/szwang/recordrtc-react) | [article](http://suzannewang.com/recordrtc/) |
+| Video.js      | [github](https://github.com/collab-project/videojs-record) | None |
+| Meteor        | [github](https://github.com/launchbricklabs/recordrtc-meteor-demo) | None |
 
 ## License
 
-[RecordRTC.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC) is released under [MIT licence](https://www.webrtc-experiment.com/licence/) . Copyright (c) [Muaz Khan](https://plus.google.com/+MuazKhan).
+[RecordRTC.js](https://github.com/muaz-khan/RecordRTC) is released under [MIT license](https://github.com/muaz-khan/RecordRTC/blob/master/LICENSE) . Copyright (c) [Muaz Khan](https://MuazKhan.com).

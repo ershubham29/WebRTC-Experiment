@@ -74,7 +74,7 @@ var broadcast = function(config) {
             onRemoteStream: function(stream) {
                 if (!stream) return;
 
-                video[moz ? 'mozSrcObject' : 'src'] = moz ? stream : webkitURL.createObjectURL(stream);
+                video.srcObject = stream;
                 video.play();
 
                 _config.stream = stream;
@@ -92,19 +92,27 @@ var broadcast = function(config) {
 
             peer = RTCPeerConnection(peerConfig);
         }
+        
+        function afterRemoteStreamStartedFlowing() {
+            gotstream = true;
+
+            config.onRemoteStream({
+                video: video,
+                stream: _config.stream
+            });
+
+            /* closing subsocket here on the offerer side */
+            if (_config.closeSocket) socket = null;
+        }
 
         function onRemoteStreamStartsFlowing() {
+            if(navigator.userAgent.match(/Android|iPhone|iPad|iPod|BlackBerry|IEMobile/i)) {
+                // if mobile device
+                return afterRemoteStreamStartedFlowing();
+            }
+            
             if (!(video.readyState <= HTMLMediaElement.HAVE_CURRENT_DATA || video.paused || video.currentTime <= 0)) {
-                gotstream = true;
-
-                config.onRemoteStream({
-                    video: video,
-                    stream: _config.stream
-                });
-
-                /* closing subsocket here on the offerer side */
-                if (_config.closeSocket) socket = null;
-
+                afterRemoteStreamStartedFlowing();
             } else setTimeout(onRemoteStreamStartsFlowing, 50);
         }
 

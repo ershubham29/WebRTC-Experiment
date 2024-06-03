@@ -1,36 +1,79 @@
-// Last time updated at 29 January 2014, 05:46:23
+// Last time updated at June 02, 2017
 
 // Muaz Khan      - www.MuazKhan.com
 // MIT License    - www.WebRTC-Experiment.com/licence
-// Experiments    - github.com/muaz-khan/WebRTC-Experiment
-// RecordRTC      - github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC
+// RecordRTC      - github.com/muaz-khan/RecordRTC
 
-// RecordRTC over 
-// Socket.io      - github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-over-Socketio
+// RecordRTC over Socket.io - https://github.com/muaz-khan/RecordRTC/tree/master/RecordRTC-over-Socketio
+var http = require("http"),
+    url = require("url"),
+    path = require("path"),
+    fs = require("fs"),
+    uuid = require('node-uuid'),
+    port = process.argv[2] || 9001;
 
-var fs = require('fs'),
-    sys = require('sys'),
+console.log('http://localhost:' + port);
+
+var app = http.createServer(function (request, response) {
+
+    var uri = url.parse(request.url).pathname,
+        filename = path.join(process.cwd(), uri);
+
+    fs.exists(filename, function (exists) {
+        if (!exists) {
+            response.writeHead(404, {
+                "Content-Type": "text/plain"
+            });
+            response.write('404 Not Found: ' + filename + '\n');
+            response.end();
+            return;
+        }
+
+        if (fs.statSync(filename).isDirectory()) filename += '/index.html';
+
+        fs.readFile(filename, 'binary', function (err, file) {
+            if (err) {
+                response.writeHead(500, {
+                    "Content-Type": "text/plain"
+                });
+                response.write(err + "\n");
+                response.end();
+                return;
+            }
+
+            response.writeHead(200);
+            response.write(file, 'binary');
+            response.end();
+        });
+    });
+}).listen(parseInt(port, 10));
+
+var path = require('path'),
     exec = require('child_process').exec;
 
-var app = require('http').createServer(handler),
-    io = require('socket.io').listen(app);
+var io = require('socket.io').listen(app);
 
-function handler(req, res) {
-    res.writeHead(200);
-    res.end("welcome sir!");
-}
+io.sockets.on('connection', function (socket) {
+    socket.on('message', function (data) {
+        var fileName = uuid.v4();
+        
+        socket.emit('ffmpeg-output', 0);
 
-io.sockets.on('connection', function(socket) {
-    socket.on('message', function(data) {
-        console.log('writing to disk');
-        writeToDisk(data.audio.dataURL, data.audio.name);
-        writeToDisk(data.video.dataURL, data.video.name);
+        writeToDisk(data.audio.dataURL, fileName + '.wav');
 
-        merge(socket, data.audio.name, data.video.name);
+        // if it is chrome
+        if (data.video) {
+            writeToDisk(data.video.dataURL, fileName + '.webm');
+            merge(socket, fileName);
+        }
+
+        // if it is firefox or if user is recording only audio
+        else socket.emit('merged', fileName + '.wav');
     });
 });
 
-app.listen(8888);
+// isn't it redundant?
+// app.listen(8888);
 
 function writeToDisk(dataURL, fileName) {
     var fileExtension = fileName.split('.').pop(),
@@ -39,6 +82,7 @@ function writeToDisk(dataURL, fileName) {
         fileID = 2,
         fileBuffer;
 
+    // @todo return the new filename to client
     while (fs.existsSync(filePath)) {
         filePath = fileRootNameWithBase + '(' + fileID + ').' + fileExtension;
         fileID += 1;
@@ -51,77 +95,30 @@ function writeToDisk(dataURL, fileName) {
     console.log('filePath', filePath);
 }
 
-function merge(socket, audioName, videoName) {
-    // detect the current operating system
-    var isWin = !!process.platform.match( /^win/ );
+function merge(socket, fileName) {
+    var FFmpeg = require('fluent-ffmpeg');
 
-    if (isWin) {
-        ifWin(socket, audioName, videoName);
-    } else {
-        ifMac(socket, audioName, videoName);
-    }
-}
+    var audioFile = path.join(__dirname, 'uploads', fileName + '.wav'),
+        videoFile = path.join(__dirname, 'uploads', fileName + '.webm'),
+        mergedFile = path.join(__dirname, 'uploads', fileName + '-merged.webm');
 
-function ifWin(socket, audioName, videoName) {
-    // following command tries to merge wav/webm files using ffmpeg
-    var merger = __dirname + '\\merger.bat';
-    var audioFile = __dirname + '\\uploads\\' + audioName;
-    var videoFile = __dirname + '\\uploads\\' + videoName;
-    var mergedFile = __dirname + '\\uploads\\' + audioName.split('.')[0] + '-merged.webm';
-
-    // if a "directory" has space in its name; below command will fail
-    // e.g. "c:\\dir name\\uploads" will fail.
-    // it must be like this: "c:\\dir-name\\uploads"
-    var command = merger + ', ' + videoFile + " " + audioFile + " " + mergedFile + '';
-    var cmd = exec(command, function(error) {
-        if (error) {
-            console.log(error.stack);
-            console.log('Error code: ' + error.code);
-            console.log('Signal received: ' + error.signal);
-        } else {
-            socket.emit('merged', audioName.split('.')[0] + '-merged.webm');
+    new FFmpeg({
+            source: videoFile
+        })
+        .addInput(audioFile)
+        .on('error', function (err) {
+            socket.emit('ffmpeg-error', 'ffmpeg : An error occurred: ' + err.message);
+        })
+        .on('progress', function (progress) {
+            socket.emit('ffmpeg-output', Math.round(progress.percent));
+        })
+        .on('end', function () {
+            socket.emit('merged', fileName + '-merged.webm');
+            console.log('Merging finished !');
 
             // removing audio/video files
             fs.unlink(audioFile);
             fs.unlink(videoFile);
-
-            // auto delete file after 1-minute
-            setTimeout(function() {
-                fs.unlink(mergedFile);
-            }, 60 * 1000);
-        }
-    });
-}
-
-function ifMac(response, audioName, videoName) {
-    // its probably *nix, assume ffmpeg is available
-    var audioFile = __dirname + '/uploads/' + audioName;
-    var videoFile = __dirname + '/uploads/' + videoName;
-    var mergedFile = __dirname + '/uploads/' + audioName.split('.')[0] + '-merged.webm';
-    var util = require('util'),
-        exec = require('child_process').exec;
-    //child_process = require('child_process');
-
-    var command = "ffmpeg -i " + videoFile + " -i " + audioFile + " -map 0:0 -map 1:0 " + mergedFile;
-
-    var child = exec(command, function(error) {
-        if (error) {
-            console.log(error.stack);
-            console.log('Error code: ' + error.code);
-            console.log('Signal received: ' + error.signal);
-
-        } else {
-            socket.emit('merged', audioName.split('.')[0] + '-merged.webm');
-
-            // removing audio/video files
-            fs.unlink(audioFile);
-            fs.unlink(videoFile);
-
-            // auto delete file after 1-minute
-            setTimeout(function() {
-                fs.unlink(mergedFile);
-            }, 60 * 1000);
-
-        }
-    });
+        })
+        .saveToFile(mergedFile);
 }

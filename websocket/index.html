@@ -1,12 +1,20 @@
 ﻿<!--
-> Muaz Khan     - https://github.com/muaz-khan 
+> Muaz Khan     - https://github.com/muaz-khan
 > MIT License   - https://www.webrtc-experiment.com/licence/
 > Documentation - https://github.com/muaz-khan/WebRTC-Experiment/tree/master/websocket
 -->
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>WebRTC » WebSockets ® Muaz Khan</title>
+        <title>WebSockets | WebRTC One-to-One Video Chat</title>
+
+        <script>
+            if(!location.hash.replace('#', '').length) {
+                location.href = location.href.split('#')[0] + '#' + (Math.random() * 100).toString().replace('.', '');
+                location.reload();
+            }
+        </script>
+        
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -14,12 +22,12 @@
         <meta name="author" content="Muaz Khan">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <link rel="stylesheet" href="https://www.webrtc-experiment.com/style.css">
-        
+
         <style>
             audio, video {
                 -moz-transition: all 1s ease;
                 -ms-transition: all 1s ease;
-                
+
                 -o-transition: all 1s ease;
                 -webkit-transition: all 1s ease;
                 transition: all 1s ease;
@@ -58,44 +66,42 @@
             document.createElement('article');
             document.createElement('footer');
         </script>
-        
+
         <!-- scripts used for peers connection -->
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
         <script src="https://www.webrtc-experiment.com/websocket/PeerConnection.js"> </script>
+        <script src="https://www.webrtc-experiment.com/view/websocket.js"> </script>
     </head>
 
     <body>
         <article>
             <header style="text-align: center;">
                 <h1>
-                    <a href="https://www.webrtc-experiment.com/">WebRTC</a> 
-                    » 
-                    <a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/websocket" target="_blank">WebSockets</a>
-                    ® 
-                    <a href="https://github.com/muaz-khan" target="_blank">Muaz Khan</a>
-                </h1>            
+                    WebSockets | WebRTC One-to-One Video Chat
+                </h1>
                 <p>
                     <a href="https://www.webrtc-experiment.com/">HOME</a>
                     <span> &copy; </span>
                     <a href="http://www.MuazKhan.com/" target="_blank">Muaz Khan</a>
-                    
+
                     .
                     <a href="http://twitter.com/WebRTCWeb" target="_blank" title="Twitter profile for WebRTC Experiments">@WebRTCWeb</a>
-                    
+
                     .
                     <a href="https://github.com/muaz-khan?tab=repositories" target="_blank" title="Github Profile">Github</a>
-                    
+
                     .
                     <a href="https://github.com/muaz-khan/WebRTC-Experiment/issues?state=open" target="_blank">Latest issues</a>
-                    
+
                     .
                     <a href="https://github.com/muaz-khan/WebRTC-Experiment/commits/master" target="_blank">What's New?</a>
                 </p>
             </header>
 
             <div class="github-stargazers"></div>
-			
+
             <!-- just copy this <section> and next script -->
-            <section class="experiment">                
+            <section class="experiment">
                 <section>
 					<span>
                         Private ?? <a href="/websocket/" target="_blank" title="Setup Private Room!"><code><strong id="unique-token">#123456789</strong></code></a>
@@ -103,197 +109,199 @@
                     <input type="text" id="your-name" placeholder="your-name">
                     <button id="start-broadcasting" class="setup">Start Transmitting Yourself!</button>
                 </section>
-                
+
                 <!-- list of all available conferencing rooms -->
                 <table id="rooms-list" style="width: 100%;"></table>
-                
+
                 <!-- local/remote videos container -->
                 <div id="videos-container"></div>
             </section>
-        
+
             <script>
                 // Muaz Khan     - https://github.com/muaz-khan
                 // MIT License   - https://www.webrtc-experiment.com/licence/
                 // Documentation - https://github.com/muaz-khan/WebRTC-Experiment/tree/master/websocket
 
-				var channel = location.href.replace( /\/|:|#|%|\.|\[|\]/g , '');
-                var websocket = new WebSocket('wss://wsnodejs.nodejitsu.com:443');
-                // var websocket = new WebSocket('wss://www.webrtc-experiment.com:8563');
-				websocket.onopen = function() {
-					websocket.push(JSON.stringify({
-						open: true,
-						channel: channel
-					}));
-				};
-				websocket.push = websocket.send;
-				websocket.send = function(data) {
-					websocket.push(JSON.stringify({
-						data: data,
-						channel: channel
-					}));
-				};
-				
-				var peer = new PeerConnection(websocket);
-					peer.onUserFound = function(userid) {
-						if (document.getElementById(userid)) return;
-						var tr = document.createElement('tr');
+                var channel = location.href.replace(/\/|:|#|%|\.|\[|\]/g, '');
 
-						var td1 = document.createElement('td');
-						var td2 = document.createElement('td');
+                var pub = 'pub-f986077a-73bd-4c28-8e50-2e44076a84e0';
+                var sub = 'sub-b8f4c07a-352e-11e2-bb9d-c7df1d04ae4a';
 
-						td1.innerHTML = userid + ' has camera. Are you interested in video chat?';
+                WebSocket  = PUBNUB.ws;
 
-						var button = document.createElement('button');
-						button.innerHTML = 'Join';
-						button.id = userid;
-						button.style.float = 'right';
-						button.onclick = function() {
-							button = this;
-							getUserMedia(function(stream) {
-								peer.addStream(stream);
-								peer.sendParticipationRequest(button.id);
-							});
-							button.disabled = true;
-						};
-						td2.appendChild(button);
+                var websocket = new WebSocket('wss://pubsub.pubnub.com/' + pub + '/' + sub + '/' + channel);
 
-						tr.appendChild(td1);
-						tr.appendChild(td2);
-						roomsList.appendChild(tr);
-					};
+                websocket.onerror = function() {
+                    //location.reload();
+                };
 
-					peer.onStreamAdded = function(e) {
-						if (e.type == 'local') document.querySelector('#start-broadcasting').disabled = false;
-						var video = e.mediaElement;
+                websocket.onclose = function() {
+                    //location.reload();
+                };
 
-						video.setAttribute('width', 600);
-						video.setAttribute('controls', true);
+                websocket.push = websocket.send;
+                websocket.send = function(data) {
+                    websocket.push(JSON.stringify(data));
+                };
 
-						videosContainer.insertBefore(video, videosContainer.firstChild);
+                var peer = new PeerConnection(websocket);
+                peer.onUserFound = function(userid) {
+                    if (document.getElementById(userid)) return;
+                    var tr = document.createElement('tr');
 
-						video.play();
-						rotateVideo(video);
-						scaleVideos();
-					};
+                    var td1 = document.createElement('td');
+                    var td2 = document.createElement('td');
 
-					peer.onStreamEnded = function(e) {
-						var video = e.mediaElement;
-						if (video) {
-							video.style.opacity = 0;
-							rotateVideo(video);
-							setTimeout(function() {
-								video.parentNode.removeChild(video);
-								scaleVideos();
-							}, 1000);
-						}
-					};
+                    td1.innerHTML = userid + ' has camera. Are you interested in video chat?';
 
-					document.querySelector('#start-broadcasting').onclick = function() {
-						this.disabled = true;
-						getUserMedia(function(stream) {
-							peer.addStream(stream);
-							peer.startBroadcasting();
-						});
-					};
+                    var button = document.createElement('button');
+                    button.innerHTML = 'Join';
+                    button.id = userid;
+                    button.style.float = 'right';
+                    button.onclick = function() {
+                        button = this;
+                        getUserMedia(function(stream) {
+                            peer.addStream(stream);
+                            peer.sendParticipationRequest(button.id);
+                        });
+                        button.disabled = true;
+                    };
+                    td2.appendChild(button);
 
-					document.querySelector('#your-name').onchange = function() {
-						peer.userid = this.value;
-					};
+                    tr.appendChild(td1);
+                    tr.appendChild(td2);
+                    roomsList.appendChild(tr);
+                };
 
-					var videosContainer = document.getElementById('videos-container') || document.body;
-					var btnSetupNewRoom = document.getElementById('setup-new-room');
-					var roomsList = document.getElementById('rooms-list');
+                peer.onStreamAdded = function(e) {
+                    if (e.type == 'local') document.querySelector('#start-broadcasting').disabled = false;
+                    var video = e.mediaElement;
 
-					if (btnSetupNewRoom) btnSetupNewRoom.onclick = setupNewRoomButtonClickHandler;
+                    video.setAttribute('width', 600);
+                    video.setAttribute('controls', true);
 
-					function rotateVideo(video) {
-						video.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(0deg)';
-						setTimeout(function() {
-							video.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(360deg)';
-						}, 1000);
-					}
+                    videosContainer.insertBefore(video, videosContainer.firstChild);
 
-					function scaleVideos() {
-						var videos = document.querySelectorAll('video'),
-							length = videos.length, video;
+                    video.play();
+                    rotateVideo(video);
+                    scaleVideos();
+                };
 
-						var minus = 130;
-						var windowHeight = 700;
-						var windowWidth = 600;
-						var windowAspectRatio = windowWidth / windowHeight;
-						var videoAspectRatio = 4 / 3;
-						var blockAspectRatio;
-						var tempVideoWidth = 0;
-						var maxVideoWidth = 0;
+                peer.onStreamEnded = function(e) {
+                    var video = e.mediaElement;
+                    if (video) {
+                        video.style.opacity = 0;
+                        rotateVideo(video);
+                        setTimeout(function() {
+                            video.parentNode.removeChild(video);
+                            scaleVideos();
+                        }, 1000);
+                    }
+                };
 
-						for (var i = length; i > 0; i--) {
-							blockAspectRatio = i * videoAspectRatio / Math.ceil(length / i);
-							if (blockAspectRatio <= windowAspectRatio) {
-								tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(length / i);
-							} else {
-								tempVideoWidth = windowWidth / i;
-							}
-							if (tempVideoWidth > maxVideoWidth)
-								maxVideoWidth = tempVideoWidth;
-						}
-						for (var i = 0; i < length; i++) {
-							video = videos[i];
-							if (video)
-								video.width = maxVideoWidth - minus;
-						}
-					}
+                document.querySelector('#start-broadcasting').onclick = function() {
+                    this.disabled = true;
+                    getUserMedia(function(stream) {
+                        peer.addStream(stream);
+                        peer.startBroadcasting();
+                    });
+                };
 
-					window.onresize = scaleVideos;
-					
-					// you need to capture getUserMedia yourself!
-				function getUserMedia(callback) {
-					var hints = {audio:true,video:{
-						optional: [],
-						mandatory: {
-							minWidth: 1280,
-							minHeight: 720,
-							maxWidth: 1920,
-							maxHeight: 1080,
-							minAspectRatio: 1.77
-						}
-					}};
-					navigator.getUserMedia(hints,function(stream) {
-						var video = document.createElement('video');
-						video.src = URL.createObjectURL(stream);
-						video.controls = true;
-						video.muted = true;
-						
-						peer.onStreamAdded({
-							mediaElement: video,
-							userid: 'self',
-							stream: stream
-						});
-						
-						callback(stream);
-					});
-				}
-				
-				(function() {
+                document.querySelector('#your-name').onchange = function() {
+                    peer.userid = this.value;
+                };
+
+                var videosContainer = document.getElementById('videos-container') || document.body;
+                var btnSetupNewRoom = document.getElementById('setup-new-room');
+                var roomsList = document.getElementById('rooms-list');
+
+                if (btnSetupNewRoom) btnSetupNewRoom.onclick = setupNewRoomButtonClickHandler;
+
+                function rotateVideo(video) {
+                    video.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(0deg)';
+                    setTimeout(function() {
+                        video.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(360deg)';
+                    }, 1000);
+                }
+
+                function scaleVideos() {
+                    var videos = document.querySelectorAll('video'),
+                        length = videos.length,
+                        video;
+
+                    var minus = 130;
+                    var windowHeight = 700;
+                    var windowWidth = 600;
+                    var windowAspectRatio = windowWidth / windowHeight;
+                    var videoAspectRatio = 4 / 3;
+                    var blockAspectRatio;
+                    var tempVideoWidth = 0;
+                    var maxVideoWidth = 0;
+
+                    for (var i = length; i > 0; i--) {
+                        blockAspectRatio = i * videoAspectRatio / Math.ceil(length / i);
+                        if (blockAspectRatio <= windowAspectRatio) {
+                            tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(length / i);
+                        } else {
+                            tempVideoWidth = windowWidth / i;
+                        }
+                        if (tempVideoWidth > maxVideoWidth)
+                            maxVideoWidth = tempVideoWidth;
+                    }
+                    for (var i = 0; i < length; i++) {
+                        video = videos[i];
+                        if (video)
+                            video.width = maxVideoWidth - minus;
+                    }
+                }
+
+                window.onresize = scaleVideos;
+
+                // you need to capture getUserMedia yourself!
+                function getUserMedia(callback) {
+                    var hints = {
+                        audio: true,
+                        video: {
+                            optional: [],
+                            mandatory: {}
+                        }
+                    };
+                    navigator.getUserMedia(hints, function(stream) {
+                        var video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.controls = true;
+                        video.muted = true;
+
+                        peer.onStreamAdded({
+                            mediaElement: video,
+                            userid: 'self',
+                            stream: stream
+                        });
+
+                        callback(stream);
+                    });
+                }
+
+                (function() {
                     var uniqueToken = document.getElementById('unique-token');
                     if (uniqueToken)
                         if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank">Share this link</a></h2>';
-                        else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace( /\./g , '-');
+                        else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace(/\./g, '-');
                 })();
-
             </script>
-            
+
             <section class="experiment">
                 <ol>
                     <li>Using WebSockets for signaling</li>
                     <li>It is one-to-one peers connection</li>
                 </ol>
             </section>
-        
+
             <section class="experiment own-widgets latest-commits">
                 <h2 class="header" id="updates" style="color: red; padding-bottom: .1em;"><a href="https://github.com/muaz-khan/WebRTC-Experiment/commits/master" target="_blank">Latest Updates</a></h2>
                 <div id="github-commits"></div>
             </section>
-        
+
             <section class="experiment">
                 <h2 class="header" id="feedback">Feedback</h2>
                 <div>
@@ -301,7 +309,7 @@
                 </div>
                 <button id="send-message" style="font-size: 1em;">Send Message</button><small style="margin-left: 1em;">Enter your email too; if you want "direct" reply!</small>
             </section>
-            
+
             <section class="experiment">
                 <h2 class="header">How to use PeerConnection.js?</h2>
                 <pre>
@@ -317,17 +325,17 @@ peer.<strong title="local or remote stream">onStreamAdded</strong> = function(e)
 peer.<strong>sendParticipationRequest</strong>(userid);
 
 // <u>otherwise</u>, call "startBroadcasting"
-// (behind the scene) this function will be invoked 
+// (behind the scene) this function will be invoked
 // recursively until a participant found
 peer.<strong>startBroadcasting</strong>();
 </pre>
             </section>
-			
+
             <section class="experiment">
                 <h2 class="header">Simplest Demo</h2>
                 <pre>
 var offerer = new <strong title="Constructor takes two arguments.
-1) websocket url and 
+1) websocket url and
 2) custom user-id">PeerConnection</strong>('<strong class="highlight" title="websocket url">ws://domain:port</strong>', '<strong class="highlight" title="custom user-id">offerer</strong>');
 offerer.<strong title="local or remote stream">onStreamAdded</strong> = function(e) {
    document.body.appendChild(e.mediaElement);
@@ -344,7 +352,7 @@ answerer.<strong title="local or remote stream">onStreamAdded</strong> = functio
 answerer.<strong title="Ask other user to establish peer connection with you!">sendParticipationRequest</strong>(<strong class="highlight" title="user-id of the offerer">'offerer'</strong>);
 </pre>
             </section>
-			
+
 			<section class="experiment">
                 <h2 class="header" id="signaling">getUserMedia is "in-your-own-hands"!</h2>
 				<p>
@@ -356,7 +364,7 @@ function getUserMedia(callback) {
         audio: true,
         video: {
             optional: [],
-			
+
             // capture super-hd stream!
             mandatory: {
                 minWidth: 1280,
@@ -367,17 +375,17 @@ function getUserMedia(callback) {
             }
         }
     };
-	
+
     navigator.getUserMedia(hints, function (stream) {
         //    you can use "peer.addStream" to attach stream
         //    peer.addStream(stream);
         // or peer.MediaStream = stream;
-	
+
         callback(stream);
-	
+
         // preview local video
         var video = document.createElement('video');
-        video.src = URL.createObjectURL(stream);
+        video.srcObject = stream;
         video.controls = true;
         video.muted = true;
 
@@ -390,12 +398,12 @@ function getUserMedia(callback) {
 }
 </pre>
 			</section>
-			
+
 			<section class="experiment">
                 <h2 class="header" id="signaling">Want to use <a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/websocket-over-nodejs" target="_blank">WebSocket over Node.js</a>?</h2>
 				<pre>
 var channel = location.href.replace(/\/|:|#|%|\.|\[|\]/g, '');
-var websocket = new WebSocket('wss://www.webrtc-experiment.com:8563');
+var websocket = new WebSocket('wss://yourdomain:port');
 websocket.onopen = function () {
     websocket.push(JSON.stringify({
         open: true,
@@ -418,11 +426,11 @@ var peer = new PeerConnection(websocket);
 				Check <a href="https://github.com/muaz-khan/WebRTC-Experiment/issues/56#issuecomment-20090650" target="_blank">other signaling examples</a>.
 			</p>
 			</section>
-			
+
         </article>
-        
+
         <a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/websocket" class="fork-left"></a>
-        
+
         <footer>
             <p>
                 <a href="https://www.webrtc-experiment.com/">WebRTC Experiments</a>
@@ -430,7 +438,7 @@ var peer = new PeerConnection(websocket);
                 <a href="mailto:muazkh@gmail.com" target="_blank">muazkh@gmail.com</a>
             </p>
         </footer>
-    
+
         <!-- commits.js is useless for you! -->
         <script src="https://www.webrtc-experiment.com/commits.js" async> </script>
     </body>

@@ -1,43 +1,39 @@
-## [ffmpeg-asm.js and RecordRTC! Audio/Video Merging & Transcoding!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/ffmpeg) / [Demos](https://www.webrtc-experiment.com/ffmpeg/)
+# [Ffmpeg Demos](https://github.com/muaz-khan/Ffmpeg.js) / [Demos](https://www.webrtc-experiment.com/ffmpeg/)
 
-[RecordRTC](https://www.webrtc-experiment.com/RecordRTC/) is used to record WAV/WebM files; [`ffmpeg-asm.js`](https://googledrive.com/host/0B6GWd_dUUTT8OEtLRGdQb2pibDg/ffmpeg_asm.js) is used to merge/transcode in mp4 or ogg/mp3.
+| Demo Name        | Demo           | Code |
+| ------------- |-------------|-------------|
+| Transcoding WAV into AAC | [Demo](https://www.webrtc-experiment.com/ffmpeg/wav-to-aac.html)  | [Source](https://github.com/muaz-khan/Ffmpeg.js/blob/master/wav-to-aac.html) |
+| Transcoding WAV into Ogg | [Demo](https://www.webrtc-experiment.com/ffmpeg/wav-to-ogg.html)  | [Source](https://github.com/muaz-khan/Ffmpeg.js/blob/master/wav-to-ogg.html) |
+| Transcoding WebM into mp4 | [Demo](https://www.webrtc-experiment.com/ffmpeg/webm-to-mp4.html)  | [Source](https://github.com/muaz-khan/Ffmpeg.js/blob/master/webm-to-mp4.html) |
+| Transcoding WebM into mp4; then merging WAV+mp4 into single mp4 | [Demo](https://www.webrtc-experiment.com/ffmpeg/merging-wav-and-webm-into-mp4.html)  | [Source](https://github.com/muaz-khan/Ffmpeg.js/blob/master/merging-wav-and-webm-into-mp4.html) |
+| Recording Audio+Canvas and merging in single mp4 | [Demo](https://www.webrtc-experiment.com/ffmpeg/audio-plus-canvas-recording.html)  | [Source](https://github.com/muaz-khan/Ffmpeg.js/blob/master/audio-plus-canvas-recording.html) |
+| Recording Audio+Screen and merging in single mp4 | [Demo](https://www.webrtc-experiment.com/ffmpeg/audio-plus-screen-recording.html)  | [Source](https://github.com/muaz-khan/Ffmpeg.js/blob/master/audio-plus-screen-recording.html) |
+| Video Cropping | [Demo](https://www.webrtc-experiment.com/ffmpeg/video-cropping.html)  | [Source](https://github.com/muaz-khan/Ffmpeg.js/blob/master/video-cropping.html) |
 
-Remember: [`ffmpeg-asm.js`](https://googledrive.com/host/0B6GWd_dUUTT8OEtLRGdQb2pibDg/ffmpeg_asm.js)'s credit goes to: https://github.com/bgrins/videoconverter.js
+Remember: [`ffmpeg-asm.js`](https://archive.org/download/ffmpeg_asm/ffmpeg_asm.js)'s credit goes to: https://github.com/bgrins/videoconverter.js
 
-=
+* [audo-plus-canvas-recording.gif](https://cdn.webrtc-experiment.com/images/audo-plus-canvas-recording.gif)
 
-## File Size?
+# File Size?
 
 **It is suggested to download `ffmpeg-asm` file and try locally!**
 
-[`ffmpeg-asm.js`](https://googledrive.com/host/0B6GWd_dUUTT8OEtLRGdQb2pibDg/ffmpeg_asm.js) file's default size is 18MB; however you can gzip it to make it about 6MB.
+[`ffmpeg-asm.js`](https://archive.org/download/ffmpeg_asm/ffmpeg_asm.js) file's default size is 18MB; however you can gzip it to make it about 6MB.
 
-=
+# LocalHost
 
-## [ffmpeg-asm.js Demos](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/ffmpeg)
+```sh
+node server.js
+```
 
-1. [Transcoding WAV into Ogg](https://www.webrtc-experiment.com/ffmpeg/wav-to-ogg.html) / [Source Code](https://github.com/muaz-khan/WebRTC-Experiment/blob/master/ffmpeg/wav-to-ogg.html)
-2. [Transcoding WebM into mp4](https://www.webrtc-experiment.com/ffmpeg/wav-to-ogg.html) / [Source Code](https://github.com/muaz-khan/WebRTC-Experiment/blob/master/ffmpeg/webm-to-mp4.html)
-3. [Transcoding WebM into mp4; then merging WAV+mp4 into single mp4](https://www.webrtc-experiment.com/ffmpeg/merging-wav-and-webm-into-mp4.html) / [Source Code](https://github.com/muaz-khan/WebRTC-Experiment/blob/master/ffmpeg/merging-wav-and-webm-into-mp4.html)
-4. [Recording Audio+Canvas and merging in single mp4](https://www.webrtc-experiment.com/ffmpeg/audio-plus-canvas-recording.html) / [Source Code](https://github.com/muaz-khan/WebRTC-Experiment/blob/master/ffmpeg/audio-plus-canvas-recording.html)
+Now open `http://localhost:9001/`.
 
-<img src="https://www.webrtc-experiment.com/images/audo-plus-canvas-recording.gif" />
+# Disclaimer
 
-=
+There is no warranty, expressed or implied, associated with this product. Use at your own risk.
 
-1. [RecordRTC to Node.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-Nodejs)
-2. [RecordRTC to PHP](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-PHP)
-3. [RecordRTC to ASP.NET MVC](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-ASPNETMVC)
-4. [RecordRTC & HTML-2-Canvas i.e. Canvas/HTML Recording!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/Canvas-Recording)
-5. [MRecordRTC i.e. Multi-RecordRTC!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/MRecordRTC)
-6. [RecordRTC on Ruby!](https://github.com/cbetta/record-rtc-experiment)
-7. [RecordRTC over Socket.io](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-over-Socketio)
-8. [ffmpeg-asm.js and RecordRTC! Audio/Video Merging & Transcoding!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/ffmpeg)
+* https://www.webrtc-experiment.com/disclaimer/
 
-=
+# License
 
-## License
-
-`ffmpeg-asm.js` is integrated with [RecordRTC](https://www.webrtc-experiment.com/RecordRTC/) by **Gregory McGee**!
-
-[RecordRTC.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC) is released under [MIT licence](https://www.webrtc-experiment.com/licence/) . Copyright (c) [Muaz Khan](https://plus.google.com/+MuazKhan).
+[All these demos](https://github.com/muaz-khan/Ffmpeg.js) are released under [MIT licence](https://www.webrtc-experiment.com/licence/) . Copyright (c) [Muaz Khan](http://www.MuazKhan.com/).

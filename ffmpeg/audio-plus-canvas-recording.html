@@ -84,12 +84,47 @@
     <button id="stop" disabled contenteditable="false">Stop</button>
 </div>
 
-<script src="//www.webrtc-experiment.com/screenshot.js"> </script>
-<script src="//www.webrtc-experiment.com/RecordRTC.js"> </script>
+<script src="https://cdn.webrtc-experiment.com/screenshot.js"> </script>
+<script src="https://cdn.webrtc-experiment.com/RecordRTC.js"> </script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 
 <script>
 var elementToShare = document.getElementById('elementToShare');
-var canvasRecorder = RecordRTC(elementToShare, {
+var canvas2d = document.createElement('canvas');
+var context = canvas2d.getContext('2d');
+
+canvas2d.width = elementToShare.clientWidth;
+canvas2d.height = elementToShare.clientHeight;
+
+canvas2d.style.top = 0;
+canvas2d.style.left = 0;
+canvas2d.style.zIndex = -1;
+(document.body || document.documentElement).appendChild(canvas2d);
+
+var isRecordingStarted = false;
+var isStoppedRecording = false;
+
+(function looper() {
+    if(!isRecordingStarted) {
+        return setTimeout(looper, 500);
+    }
+
+    html2canvas(elementToShare, {
+        grabMouse: true,
+        onrendered: function(canvas) {
+            context.clearRect(0, 0, canvas2d.width, canvas2d.height);
+            context.drawImage(canvas, 0, 0, canvas2d.width, canvas2d.height);
+
+            if(isStoppedRecording) {
+                return;
+            }
+
+            setTimeout(looper, 1);
+        }
+    });
+})();
+
+var canvasRecorder = RecordRTC(canvas2d, {
     type: 'canvas'
 });
 
@@ -98,31 +133,43 @@ var recordAudio;
 document.getElementById('start').onclick = function() {
     this.disabled = true;
     navigator.getUserMedia({ audio: true }, function(stream) {
-        canvasRecorder.startRecording();
+        var audio = document.createElement('audio');
+        audio.muted = true;
+        audio.volume = 0;
+        audio.srcObject = stream;
+
         recordAudio = RecordRTC(stream, {
-            bufferSize: 16384
+            type: 'audio',
+			recorderType: StereoAudioRecorder
         });
+
+        isStoppedRecording = false;
+        isRecordingStarted = true;
+
+        canvasRecorder.startRecording();
         recordAudio.startRecording();
+
         document.getElementById('stop').disabled = false;
     }, function(error) { log( JSON.stringify ( error ) ); });
 };
 document.getElementById('stop').onclick = function() {
     this.disabled = true;
     recordAudio.stopRecording(function() {
+        isStoppedRecording = true;
         canvasRecorder.stopRecording(function() {
-        console.log (' canvas-blob', canvasRecorder.getBlob() );
-        console.log (' audio-blob' , recordAudio.getBlob()   );
-        convertStreams(canvasRecorder.getBlob(), recordAudio.getBlob());
+            convertStreams(canvasRecorder.getBlob(), recordAudio.getBlob());
             log('<a href="'+ workerPath +'" download="ffmpeg-asm.js">ffmpeg-asm.js</a> file download started. It is about 18MB in size; please be patient!');
         });
     });
-    
+
     document.getElementById('start').disabled = false;
 };
 
+var workerPath = 'https://archive.org/download/ffmpeg_asm/ffmpeg_asm.js';
 
-// var workerPath = location.href.replace(location.href.split('/').pop(), '') + 'ffmpeg_asm.js';
-var workerPath = 'https://googledrive.com/host/0B6GWd_dUUTT8OEtLRGdQb2pibDg/ffmpeg_asm.js';
+if(document.domain == 'localhost') {
+	workerPath = location.href.replace(location.href.split('/').pop(), '') + 'ffmpeg_asm.js';
+}
 
 function processInWebWorker() {
     var blob = URL.createObjectURL(new Blob(['importScripts("' + workerPath + '");var now = Date.now;function print(text) {postMessage({"type" : "stdout","data" : text});};onmessage = function(event) {var message = event.data;if (message.type === "command") {var Module = {print: print,printErr: print,files: message.files || [],arguments: message.arguments || [],TOTAL_MEMORY: 268435456};postMessage({"type" : "start","data" : Module.arguments.join(" ")});postMessage({"type" : "stdout","data" : "Received command: " +Module.arguments.join(" ") +((Module.TOTAL_MEMORY) ? ".  Processing with " + Module.TOTAL_MEMORY + " bits." : "")});var time = now();var result = ffmpeg_run(Module);var totalTime = now() - time;postMessage({"type" : "stdout","data" : "Finished processing (took " + totalTime + "ms)"});postMessage({"type" : "done","data" : result,"time" : totalTime});}};postMessage({"type" : "ready"});'], {
@@ -195,10 +242,35 @@ function convertStreams(videoBlob, audioBlob) {
     };
     var postMessage = function() {
         posted = true;
-
-        worker.postMessage({
+		
+		/*
+			[
+                '-i', 'video.webm',
+                '-i', 'audio.wav',
+				'-s', '1280x720',
+                '-c:v', 'mpeg4',
+                '-c:a', 'aac',
+                '-b:v', '1450k',
+                '-b:a', '96k',
+				'-bf', '2',
+				'-g', '90',
+				'-sc_threshold', '0',
+				'-ar', '32000',
+                '-strict', 'experimental', 'output.mp4'
+            ]
+		*/
+		
+		worker.postMessage({
             type: 'command',
-            arguments: ['-i', 'video.webm', '-i', 'audio.wav', '-c:v', 'mpeg4', '-c:a', 'vorbis', '-b:v', '64k', '-b:a', '12k', '-strict', 'experimental', 'output.mp4'],
+            arguments: [
+                '-i', 'video.webm',
+                '-i', 'audio.wav',
+                '-c:v', 'mpeg4',
+                '-c:a', 'vorbis', // or aac
+                '-b:v', '6400k',  // or 1450k
+                '-b:a', '4800k',  // or 96k
+                '-strict', 'experimental', 'output.mp4'
+            ],
             files: [
                 {
                     data: new Uint8Array(vab),
@@ -225,4 +297,4 @@ function log(message) {
     console.log(message);
 }
 </script>
-<a href="https://www.webrtc-experiment.com/" style="border-bottom: 1px solid red; color: red; font-size: 1.2em; position: absolute; right: 0; text-decoration: none; top: 0;">←WebRTC Experiments Homepage</a>
+<a href="https://www.webrtc-experiment.com/ffmpeg/" style="border-bottom: 1px solid red; color: red; font-size: 1.2em; position: absolute; right: 0; text-decoration: none; top: 0;">←Try other Ffmpeg.js and RecordRTC demos</a>

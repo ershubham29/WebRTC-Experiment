@@ -1,10 +1,10 @@
-#### RecordRTC to ASP.NET MVC / [Demo](https://www.webrtc-experiment.com/RecordRTC/RecordRTC-to-ASPNETMVC/)
+# RecordRTC to ASP.NET MVC
 
-This documentation explains how to POST recorded audio/video files to ASP.NET MVC (IIS) server. It captures `Blob` and POST them using XHR2/FormData.
+* https://github.com/muaz-khan/RecordRTC/tree/master/RecordRTC-to-ASPNETMVC
 
-=
+> This documentation explains how to POST recorded audio/video files to ASP.NET MVC (IIS) server. It captures `Blob` and POST them using XHR2/FormData.
 
-##### ASP.NET MVC (CSharp) code
+# ASP.NET MVC (CSharp) code
 
 ```csharp
 [HttpPost]
@@ -22,9 +22,7 @@ public ActionResult PostRecordedAudioVideo()
 }
 ```
 
-=
-
-##### JavaScript code
+# JavaScript code
 
 ```javascript
 var fileType = 'video'; // or "audio"
@@ -50,16 +48,6 @@ function xhr(url, data, callback) {
 }
 ```
 
-1. [RecordRTC to Node.js](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-Nodejs)
-2. [RecordRTC to PHP](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-PHP)
-3. [RecordRTC to ASP.NET MVC](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-to-ASPNETMVC)
-4. [RecordRTC & HTML-2-Canvas i.e. Canvas/HTML Recording!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/Canvas-Recording)
-5. [MRecordRTC i.e. Multi-RecordRTC!](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/MRecordRTC)
-6. [RecordRTC on Ruby!](https://github.com/cbetta/record-rtc-experiment)
-7. [RecordRTC over Socket.io](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC/RecordRTC-over-Socketio)
+# License
 
-=
-
-##### License
-
-[RecordRTC](https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC) is released under [MIT licence](https://www.webrtc-experiment.com/licence/) . Copyright (c) [Muaz Khan](https://plus.google.com/100325991024054712503).
+[RecordRTC](https://github.com/muaz-khan/RecordRTC) is released under [MIT licence](https://www.webrtc-experiment.com/licence/) . Copyright (c) [Muaz Khan](http://www.MuazKhan.com/).

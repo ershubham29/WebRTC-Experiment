@@ -35,7 +35,7 @@
 
                 var audio = document.createElement('audio');
                 audio.id = 'self';
-                audio[isFirefox ? 'mozSrcObject' : 'src'] = isFirefox ? stream : window.webkitURL.createObjectURL(stream);
+                audio[isFirefox ? 'mozSrcObject' : 'src'] = isFirefox ? stream : window.URL.createObjectURL(stream);
                 audio.autoplay = true;
                 audio.controls = true;
                 audio.play();
@@ -91,7 +91,7 @@
 
             // Firebase is capable to store data in JSON format
             // root.transmitOnce = true;
-            var socket = new window.Firebase('https://' + (root.firebase || 'chat') + '.firebaseIO.com/' + channel);
+            var socket = new window.Firebase('https://' + (root.firebase || 'signaling') + '.firebaseIO.com/' + channel);
             socket.on('child_added', function(snap) {
                 var data = snap.val();
                 if (data.userid != userid) {
@@ -229,7 +229,7 @@
 
                 var audio = document.createElement('audio');
                 audio.id = _userid;
-                audio[isFirefox ? 'mozSrcObject' : 'src'] = isFirefox ? stream : window.webkitURL.createObjectURL(stream);
+                audio[isFirefox ? 'mozSrcObject' : 'src'] = isFirefox ? stream : window.URL.createObjectURL(stream);
                 audio.autoplay = true;
                 audio.controls = true;
 
@@ -285,40 +285,43 @@
         unloadHandler(userid, signaler);
     }
 
-    // reusable stuff
-    var RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-    var RTCSessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
-    var RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
+    // IceServersHandler.js
 
-    navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
-    window.URL = window.webkitURL || window.URL;
+    var IceServersHandler = (function() {
+        function getIceServers(connection) {
+            // resiprocate: 3344+4433
+            // pions: 7575
+            var iceServers = [{
+                'urls': [
+                    'stun:stun.l.google.com:19302',
+                    'stun:stun1.l.google.com:19302',
+                    'stun:stun2.l.google.com:19302',
+                    'stun:stun.l.google.com:19302?transport=udp',
+                ]
+            }];
+
+            return iceServers;
+        }
+
+        return {
+            getIceServers: getIceServers
+        };
+    })();
+
+    // reusable stuff
+    var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+    var RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription;
+    var RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate;
+
+    navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+    window.URL = window.URL || window.webkitURL;
 
     var isFirefox = !!navigator.mozGetUserMedia;
     var isChrome = !!navigator.webkitGetUserMedia;
 
-    var STUN = {
-        url: isChrome ? 'stun:stun.l.google.com:19302' : 'stun:23.21.150.121'
-    };
-
-    var TURN = {
-        url: 'turn:webrtc%40live.com@numb.viagenie.ca',
-        credential: 'muazkh'
-    };
-
     var iceServers = {
-        iceServers: [STUN]
+        iceServers: IceServersHandler.getIceServers()
     };
-
-    if (isChrome) {
-        if (parseInt(navigator.userAgent.match( /Chrom(e|ium)\/([0-9]+)\./ )[2]) >= 28)
-            TURN = {
-                url: 'turn:numb.viagenie.ca',
-                credential: 'muazkh',
-                username: 'webrtc@live.com'
-            };
-
-        iceServers.iceServers = [STUN, TURN];
-    }
 
     var optionalArgument = {
         optional: [{

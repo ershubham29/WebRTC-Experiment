@@ -1,25 +1,37 @@
-﻿<!--
-> Muaz Khan     - https://github.com/muaz-khan 
+<!-- Demo version: 2019.04.08 -->
+
+<!--
+> Muaz Khan     - https://github.com/muaz-khan
 > MIT License   - https://www.webrtc-experiment.com/licence/
 > Documentation - https://github.com/muaz-khan/WebRTC-Experiment/tree/master/Pluginfree-Screen-Sharing
 -->
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>WebRTC Screen Sharing | Plugin-free ® Muaz Khan</title>
+        <title>WebRTC Screen Sharing | Plugin-free</title>
+
+        <script>
+            if(!location.hash.replace('#', '').length) {
+                location.href = location.href.split('#')[0] + '#' + (Math.random() * 100).toString().replace('.', '');
+                location.reload();
+            }
+        </script>
+
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
         <link rel="author" type="text/html" href="https://plus.google.com/+MuazKhan">
         <meta name="author" content="Muaz Khan">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <link rel="stylesheet" href="//www.webrtc-experiment.com/style.css">
-        
+
+        <link rel="stylesheet" href="https://www.webrtc-experiment.com/style.css">
+
         <style>
             video {
                 -moz-transition: all 1s ease;
                 -ms-transition: all 1s ease;
-                
+
                 -o-transition: all 1s ease;
                 -webkit-transition: all 1s ease;
                 transition: all 1s ease;
@@ -49,11 +61,10 @@
             .setup {
                 border-bottom-left-radius: 0;
                 border-top-left-radius: 0;
-                font-size: 102%;
-                height: 47px;
-                margin-left: -9px;
-                margin-top: 8px;
-                position: absolute;
+                font-size: 1.5em;
+                margin-bottom: 20px;
+                margin-top: 20px;
+                border-radius: 5px;
             }
 
             p { padding: 1em; }
@@ -68,153 +79,240 @@
             document.createElement('article');
             document.createElement('footer');
         </script>
-        
+
         <!-- scripts used for screen-sharing -->
-        <script src='//www.webrtc-experiment.com/firebase.js'> </script>
-        <script src="//www.webrtc-experiment.com/Pluginfree-Screen-Sharing/conference.js"> </script>
+        <script src="https://www.webrtc-experiment.com/socket.io.js"> </script>
+        <script src="https://www.webrtc-experiment.com/DetectRTC.js"></script>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+        <script src="https://www.webrtc-experiment.com/CodecsHandler.js"></script>
+        <script src="https://www.webrtc-experiment.com/BandwidthHandler.js"></script>
+        <script src="https://www.webrtc-experiment.com/IceServersHandler.js"></script>
+        <script src="https://www.webrtc-experiment.com/Pluginfree-Screen-Sharing/conference.js"> </script>
     </head>
 
     <body>
         <article>
             <header style="text-align: center;">
                 <h1>
-                    <a href="https://www.webrtc-experiment.com/">WebRTC</a> 
-                    <a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/Pluginfree-Screen-Sharing" target="_blank">Plugin-free Screen Sharing</a>
-                    ® 
-                    <a href="https://github.com/muaz-khan" target="_blank">Muaz Khan</a>
-                </h1> 
+                    WebRTC Screen Sharing | Plugin-free
+                </h1>
                 <p>
                     <a href="https://www.webrtc-experiment.com/">HOME</a>
                     <span> &copy; </span>
-                    <a href="http://www.MuazKhan.com/" target="_blank">Muaz Khan</a>
-                    
+                    <a href="https://MuazKhan.com/" target="_blank">Muaz Khan</a>
+
                     .
                     <a href="http://twitter.com/WebRTCWeb" target="_blank" title="Twitter profile for WebRTC Experiments">@WebRTCWeb</a>
-                    
+
                     .
                     <a href="https://github.com/muaz-khan?tab=repositories" target="_blank" title="Github Profile">Github</a>
-                    
+
                     .
                     <a href="https://github.com/muaz-khan/WebRTC-Experiment/issues?state=open" target="_blank">Latest issues</a>
-                    
+
                     .
                     <a href="https://github.com/muaz-khan/WebRTC-Experiment/commits/master" target="_blank">What's New?</a>
                 </p>
             </header>
 
             <div class="github-stargazers"></div>
-        
+
+            <h2 style="display: block;text-align: center;border:0;margin-bottom:0;">High Quality screen sharing application using <a href="https://www.webrtc-experiment.com/">WebRTC</a>!</h2>
+
+            <section id="logs-message" class="experiment" style="display: none;text-align: center;font-size: 1.5em;line-height: 2;color: red;">WebRTC getDisplayMedia API.</section>
+
             <!-- just copy this <section> and next script -->
-            <section class="experiment">                
-                <section id="number-of-participants">
-                    <span>
-                        Private ?? <a href="/Pluginfree-Screen-Sharing/" target="_blank" title="Open this link for private screen sharing!"><code><strong id="unique-token">#123456789</strong></code></a>
-                    </span>
-                    <input type="text" id="room-name">
+            <section class="experiment">
+                <section class="hide-after-join" style="text-align: center;">                    
+                    <input type="text" id="room-name" placeholder="Enter " style="width: 80%; text-align: center; display: none;">
                     <button id="share-screen" class="setup">Share Your Screen</button>
                 </section>
-                
-                <!-- list of all available broadcasting rooms -->
-                <table style="width: 100%;" id="rooms-list"></table>
-                
+
                 <!-- local/remote videos container -->
                 <div id="videos-container"></div>
+
+                <section id="unique-token" style="display: none; text-align: center; padding: 20px;"></section>
             </section>
-        
+
             <script>
                 // Muaz Khan     - https://github.com/muaz-khan
                 // MIT License   - https://www.webrtc-experiment.com/licence/
                 // Documentation - https://github.com/muaz-khan/WebRTC-Experiment/tree/master/Pluginfree-Screen-Sharing
 
                 var config = {
+                    // via: https://github.com/muaz-khan/WebRTC-Experiment/tree/master/socketio-over-nodejs
                     openSocket: function(config) {
-                        var channel = config.channel || location.href.replace( /\/|:|#|%|\.|\[|\]/g , '');
-                        var socket = new Firebase('https://chat.firebaseIO.com/' + channel);
-                        socket.channel = channel;
-                        socket.on("child_added", function(data) {
-                            config.onmessage && config.onmessage(data.val());
+                        var SIGNALING_SERVER = 'https://socketio-over-nodejs2.herokuapp.com:443/';
+
+                        config.channel = config.channel || location.href.replace(/\/|:|#|%|\.|\[|\]/g, '');
+                        var sender = Math.round(Math.random() * 999999999) + 999999999;
+
+                        io.connect(SIGNALING_SERVER).emit('new-channel', {
+                            channel: config.channel,
+                            sender: sender
                         });
-                        socket.send = function(data) {
-                            this.push(data);
-                        };
-                        config.onopen && setTimeout(config.onopen, 1);
-                        socket.onDisconnect().remove();
-                        return socket;
-                    },
-                    onRemoteStream: function(media) {
-                        var video = media.video;
-                        video.setAttribute('controls', true);
-                        videosContainer.insertBefore(video, videosContainer.firstChild);
-                        video.play();
-                        rotateVideo(video);
-                    },
-                    onRoomFound: function(room) {
-                        var alreadyExist = document.getElementById(room.broadcaster);
-                        if (alreadyExist) return;
 
-                        if (typeof roomsList === 'undefined') roomsList = document.body;
+                        var socket = io.connect(SIGNALING_SERVER + config.channel);
+                        socket.channel = config.channel;
+                        socket.on('connect', function () {
+                            if (config.callback) config.callback(socket);
+                        });
 
-                        var tr = document.createElement('tr');
-                        tr.setAttribute('id', room.broadcaster);
-                        tr.innerHTML = '<td>' + room.roomName + '</td>' +
-                            '<td><button class="join" id="' + room.roomToken + '">Open Screen</button></td>';
-                        roomsList.insertBefore(tr, roomsList.firstChild);
-
-                        var button = tr.querySelector('.join');
-                        button.onclick = function() {
-                            var button = this;
-                            button.disabled = true;
-                            conferenceUI.joinRoom({
-                                roomToken: button.id,
-                                joinUser: button.parentNode.parentNode.id
+                        socket.send = function (message) {
+                            socket.emit('message', {
+                                sender: sender,
+                                data: message
                             });
                         };
+
+                        socket.on('message', config.onmessage);
+                    },
+                    onRemoteStream: function(media) {
+                        if(isbroadcaster) return;
+
+                        var video = media.video;
+                        videosContainer.insertBefore(video, videosContainer.firstChild);
+                        rotateVideo(video);
+
+                        document.querySelector('.hide-after-join').style.display = 'none';
+                    },
+                    onRoomFound: function(room) {
+                        if(isbroadcaster) return;
+
+                        conferenceUI.joinRoom({
+                            roomToken: room.roomToken,
+                            joinUser: room.broadcaster
+                        });
+
+                        document.querySelector('.hide-after-join').innerHTML = '<img src="https://www.webrtc-experiment.com/images/key-press.gif" style="margint-top:10px; width:50%;" />';
                     },
                     onNewParticipant: function(numberOfParticipants) {
-                        document.title = numberOfParticipants + ' users are viewing your screen!';
-                        var element = document.getElementById('number-of-participants');
-                        if (element) {
-                            element.innerHTML = numberOfParticipants + ' users are viewing your screen!';
+                        var text = numberOfParticipants + ' users are viewing your screen!';
+                        
+                        if(numberOfParticipants <= 0) {
+                            text = 'No one is viewing your screen YET.';
+                        }
+                        else if(numberOfParticipants == 1) {
+                            text = 'Only one user is viewing your screen!';
+                        }
+
+                        document.title = text;
+                        showErrorMessage(document.title, 'green');
+                    },
+                    oniceconnectionstatechange: function(state) {
+                        var text = '';
+
+                        if(state == 'closed' || state == 'disconnected') {
+                            text = 'One of the participants just left.';
+                            document.title = text;
+                            showErrorMessage(document.title);
+                        }
+
+                        if(state == 'failed') {
+                            text = 'Failed to bypass Firewall rules. It seems that target user did not receive your screen. Please ask him reload the page and try again.';
+                            document.title = text;
+                            showErrorMessage(document.title);
+                        }
+
+                        if(state == 'connected' || state == 'completed') {
+                            text = 'A user successfully received your screen.';
+                            document.title = text;
+                            showErrorMessage(document.title, 'green');
+                        }
+
+                        if(state == 'new' || state == 'checking') {
+                            text = 'Someone is trying to join you.';
+                            document.title = text;
+                            showErrorMessage(document.title, 'green');
                         }
                     }
                 };
 
+                function showErrorMessage(error, color) {
+                    var errorMessage = document.querySelector('#logs-message');
+                    errorMessage.style.color = color || 'red';
+                    errorMessage.innerHTML = error;
+                    errorMessage.style.display = 'block';
+                }
+
+                function getDisplayMediaError(error) {
+                    if (location.protocol === 'http:') {
+                        showErrorMessage('Please test this WebRTC experiment on HTTPS.');
+                    } else {
+                        showErrorMessage(error.toString());
+                    }
+                }
+
                 function captureUserMedia(callback) {
                     var video = document.createElement('video');
-                    video.setAttribute('autoplay', true);
-                    video.setAttribute('controls', true);
-                    videosContainer.insertBefore(video, videosContainer.firstChild);
+                    video.muted = true;
+                    video.volume = 0;
+                    try {
+                        video.setAttributeNode(document.createAttribute('autoplay'));
+                        video.setAttributeNode(document.createAttribute('playsinline'));
+                        video.setAttributeNode(document.createAttribute('controls'));
+                    } catch (e) {
+                        video.setAttribute('autoplay', true);
+                        video.setAttribute('playsinline', true);
+                        video.setAttribute('controls', true);
+                    }
 
-                    var screen_constraints = {
-                        mandatory: {
-                            chromeMediaSource: 'screen',
-                            maxWidth: 1280,
-                            maxHeight: 720
-                        },
-                        optional: []
-                    };
-                    var constraints = {
-                        audio: false,
-                        video: screen_constraints
-                    };
-                    getUserMedia({
-                        video: video,
-                        constraints: constraints,
-                        onsuccess: function(stream) {
+                    if(navigator.getDisplayMedia || navigator.mediaDevices.getDisplayMedia) {
+                        function onGettingSteam(stream) {
+                            video.srcObject = stream;
+                            videosContainer.insertBefore(video, videosContainer.firstChild);
+
+                            addStreamStopListener(stream, function() {
+                                location.reload();
+                            });
+
                             config.attachStream = stream;
                             callback && callback();
-
-                            video.setAttribute('muted', true);
                             rotateVideo(video);
-                        },
-                        onerror: function() {
-                            if (location.protocol === 'http:') {
-                                alert('Please test this WebRTC experiment on HTTPS.');
+
+                            addStreamStopListener(stream, function() {
+                                location.reload();
+                            });
+
+                            showPrivateLink();
+
+                            document.querySelector('.hide-after-join').style.display = 'none';
+                        }
+
+                        if(navigator.mediaDevices.getDisplayMedia) {
+                            navigator.mediaDevices.getDisplayMedia({video: true}).then(stream => {
+                                onGettingSteam(stream);
+                            }, getDisplayMediaError).catch(getDisplayMediaError);
+                        }
+                        else if(navigator.getDisplayMedia) {
+                            navigator.getDisplayMedia({video: true}).then(stream => {
+                                onGettingSteam(stream);
+                            }, getDisplayMediaError).catch(getDisplayMediaError);
+                        }
+                    }
+                    else {
+                        if (DetectRTC.browser.name === 'Chrome') {
+                            if (DetectRTC.browser.version == 71) {
+                                showErrorMessage('Please enable "Experimental WebPlatform" flag via chrome://flags.');
+                            } else if (DetectRTC.browser.version < 71) {
+                                showErrorMessage('Please upgrade your Chrome browser.');
                             } else {
-                                alert('Screen capturing is either denied or not supported. Did you enable this flag: "Enable screen capture support in getUserMedia"?');
+                                showErrorMessage('Please make sure that you are not using Chrome on iOS.');
                             }
                         }
-                    });
+
+                        if (DetectRTC.browser.name === 'Firefox') {
+                            showErrorMessage('Please upgrade your Firefox browser.');
+                        }
+
+                        if (DetectRTC.browser.name === 'Edge') {
+                            showErrorMessage('Please upgrade your Edge browser.');
+                        }
+
+                        if (DetectRTC.browser.name === 'Safari') {
+                            showErrorMessage('Safari does NOT supports getDisplayMedia API yet.');
+                        }
+                    }
                 }
 
                 /* on page load: get public rooms */
@@ -222,7 +320,6 @@
 
                 /* UI specific */
                 var videosContainer = document.getElementById("videos-container") || document.body;
-                var roomsList = document.getElementById('rooms-list');
 
                 document.getElementById('share-screen').onclick = function() {
                     var roomName = document.getElementById('room-name') || { };
@@ -242,76 +339,38 @@
                     }, 1000);
                 }
 
-                (function() {
+                function showPrivateLink() {
                     var uniqueToken = document.getElementById('unique-token');
-                    if (uniqueToken)
-                        if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank">Share this link</a></h2>';
-                        else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace( /\./g , '-');
-                })();
+                    uniqueToken.innerHTML = '<a href="' + location.href + '" target="_blank">Copy & Share This Private Room Link</a>';
+                    uniqueToken.style.display = 'block';
+                }
 
             </script>
-            
+
             <section class="experiment">
+                <h2 id="advantages">
+                    <a href="#advantages">Advantages</a>
+                </h2>
                 <ol>
-                    <li>Share full screen with one or more users in <strong>HD</strong> format!</li>
-                    <li>Make sure you enabled the flag "<strong>Enable screen capture support in getUserMedia</strong>" via "<strong>chrome://flags/#enable-usermedia-screen-capture</strong>".<br/><br/>Screen-sharing fails if you've not enabled that flag. 
-                    
-                        <br /><br /><strong>When you enabled the flag; don't forget to restart/relaunch the browser! You can find a "relaunch" button at bottom-left corner of the screen.</strong>
-                    </li>
-                    <li>Recursive cascade images or blurred screen experiences occur only when you try to share screen between two tabs on the same system. This NEVER happens when sharing between unique systems or devices.</li>
-                    <li>You may face low-quality screen resolutions on Linux or Mac. It works very well on Windows!</li>
-                    <li>Firefox/Opera has no support of screen-sharing yet. However, you can view shared screens on both Firefox and Opera!</li>
-                    <li>Remember, it is not desktop sharing! It is just a state-less screen sharing. Desktop sharing is possible only through native (C++) applications.</li>
-                    <li>P.S. Firefox has modules for screen capturing; however, it may take months to land it in nightly!</li>
-                </ol>
-            </section>
-        
-            <section class="experiment own-widgets latest-commits">
-                <h2 class="header" id="updates" style="color: red; padding-bottom: .1em;"><a href="https://github.com/muaz-khan/WebRTC-Experiment/commits/master" target="_blank">Latest Updates</a></h2>
-                <div id="github-commits"></div>
-            </section>
-        
-            <section class="experiment">
-                <h2 class="header" id="feedback">Feedback</h2>
-                <div>
-                    <textarea id="message" style="border: 1px solid rgb(189, 189, 189); height: 8em; margin: .2em; outline: none; resize: vertical; width: 98%;" placeholder="Have any message? Suggestions or something went wrong?"></textarea>
-                </div>
-                <button id="send-message" style="font-size: 1em;">Send Message</button><small style="margin-left: 1em;">Enter your email too; if you want "direct" reply!</small>
-            </section>
-            
-            <section class="experiment">
-                <h2 class="header">Why Screen Sharing Fails?</h2>
-                <ol>
+                    <li>As of 2019, this demo is now 100% Plugin-free!! Believe that! No Chrome extension! No Firefox addon!</li>
+                    <li>Share screen from Chrome, Firefox or Edge. Safari support is coming soon.</li>
                     <li>
-                        You've not used '<strong>chromeMediaSource</strong>' constraint: 
-                        <pre>
-mandatory: {chromeMediaSource: 'screen'}
-</pre>
+                        You can open private i.e. secure rooms:<br /><br />
+                        <ol>
+                            <li>Use hashes to open private rooms: <strong>#private-room</strong></li>
+                            <li>Use URL parameters to open private rooms: <strong>?private=room</strong></li>
+                        </ol>
                     </li>
-                    <li>You requested audio-stream alongwith '<strong>chromeMediaSource</strong>' – it is not permitted.</li>
-                    <li>You're not testing it on SSL origin (HTTPS domain).</li>
-                    <li>Screen capturing is requested <strong>multiple times</strong>. Multiple capturing of screen is not allowed even from two unique tabs. (This issue is old. Chrome now supports multi-capturing of the screen)</li>
-                    <li>You may used media constraints like min/max frameRate; bandwidth or min/max width/height like 2000*2000 that is "currently" not allowed.</li>
-                </ol>
-				
-                <p>
-                    <strong><code>mandatory: {chromeMediaSource: 'tab'}</code></strong> is useful only in chrome extensions. See <a href="https://www.webrtc-experiment.com/screen-broadcast/">Tab sharing using tabCapture APIs</a>.
-                </p>
-            </section>
-			
-            <section class="experiment">
-                <h2 class="header">Suggestions</h2>
-                <ol>
-                    <li>
-                        <a href="http://www.RTCMultiConnection.org/" target="_blank">RTCMultiConnection.js</a> can be used for HD screen sharing; HD audio/video streaming; fastest file sharing; and writing entire skype-like app in the browser!
-                    </li>
+                    <li>Upto 10 people can view your screen. System restrictions (CPU/RAM) still applies.</li>
                 </ol>
             </section>
-            
+
+            <section class="experiment"><small id="send-message"></small></section>
+
         </article>
-        
-        <a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/Pluginfree-Screen-Sharing" class="fork-right"></a>
-        
+
+        <a href="https://github.com/muaz-khan/WebRTC-Experiment/tree/master/Pluginfree-Screen-Sharing" class="fork-left"></a>
+
         <footer>
             <p>
                 <a href="https://www.webrtc-experiment.com/">WebRTC Experiments</a>
@@ -319,8 +378,8 @@ mandatory: {chromeMediaSource: 'screen'}
                 <a href="mailto:muazkh@gmail.com" target="_blank">muazkh@gmail.com</a>
             </p>
         </footer>
-    
+
         <!-- commits.js is useless for you! -->
-        <script src="//www.webrtc-experiment.com/commits.js" async> </script>
+        <script src="https://www.webrtc-experiment.com/commits.js" async> </script>
     </body>
 </html>
